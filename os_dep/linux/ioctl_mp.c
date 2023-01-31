@@ -1493,7 +1493,7 @@ int rtw_mp_pretx_proc(PADAPTER padapter, u8 bStartTest, char *extra)
 		if (bStartTest != 0)
 			strcat(extra, "\nStart continuous DA=ffffffffffff len=1500\n infinite=yes.");
 		SetSingleToneTx(padapter, (u8)bStartTest);
-		break;
+		return 0;
 	case MP_CONTINUOUS_TX:
 		if (bStartTest != 0)
 			strcat(extra, "\nStart continuous DA=ffffffffffff len=1500\n infinite=yes.");

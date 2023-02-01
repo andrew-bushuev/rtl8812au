@@ -169,7 +169,7 @@ int rtw_mp_read_reg(struct net_device *dev,
 	case 'b':
 		data32 = rtw_read8(padapter, addr);
 		RTW_INFO("%x\n", data32);
-		sprintf(extra, "%d", data32);
+		sprintf(extra, "0x%02X", data32);
 		wrqu->length = strlen(extra);
 		break;
 	case 'w':
@@ -198,7 +198,7 @@ int rtw_mp_read_reg(struct net_device *dev,
 			if (*pnext != '\0') {
 				/*strtout = simple_strtoul(pnext , &ptmp, 16);*/
 				ret = sscanf(pnext, "%x", &strtout);
-				pextra += sprintf(pextra, " %d", strtout);
+				pextra += sprintf(pextra, " 0x%02X", strtout);
 			} else
 				break;
 			pch = pnext;
@@ -230,7 +230,7 @@ int rtw_mp_read_reg(struct net_device *dev,
 			pnext++;
 			if (*pnext != '\0') {
 				ret = sscanf(pnext, "%x", &strtout);
-				pextra += sprintf(pextra, " %d", strtout);
+				pextra += sprintf(pextra, " 0x%02X", strtout);
 			} else
 				break;
 			pch = pnext;
@@ -346,7 +346,7 @@ int rtw_mp_read_rf(struct net_device *dev,
 		if (*pnext != '\0') {
 			/*strtou =simple_strtoul(pnext , &ptmp, 16);*/
 			ret = sscanf(pnext, "%x", &strtou);
-			pextra += sprintf(pextra, " %d", strtou);
+			pextra += sprintf(pextra, " 0x%02X", strtou);
 		} else
 			break;
 		pch = pnext;
@@ -1850,11 +1850,21 @@ int rtw_mp_tx(struct net_device *dev,
 				antenna = ANTENNA_ABCD;
 				break;
 			}
-			RTW_INFO("%s: antenna=0x%x\n", __func__, antenna);
+			RTW_INFO("%s: DEBUG AND DELETE: antenna = 0x%x, txmode == 0x%x \n", __func__, antenna, txmode);
 			padapter->mppriv.antenna_tx = antenna;
 			padapter->mppriv.antenna_rx = antenna;
 			pHalData->antenna_tx_path = antenna;
-			SetAntenna(padapter);
+
+			// txmode : < 0 = CONTINUOUS_TX, 1 = PACKET_TX, 2 = SINGLE_TONE_TX, 3 = CARRIER_SUPPRISSION_TX, 4 = SINGLE_CARRIER_TX>
+			// prob the SetAntenna should be disabled in other modes like CARRIER_SUPPRISSION_TX / SINGLE_CARRIER_TX
+			if (txmode == 2) {
+				RTW_INFO("%s: DIRTY HACK: in the single tone mode the antenna managment should be disabled\n", __func__);			
+			}
+			else {
+				RTW_INFO("%s: Applying antenna configs, may interfere with single tone generator\n", __func__);			
+				SetAntenna(padapter);
+			}
+
 
 			if (txmode == 0)
 				pmp_priv->mode = MP_CONTINUOUS_TX;

@@ -1190,6 +1190,7 @@ VOID mpt_SetRFPath_819X(PADAPTER	pAdapter)
 
 	switch (ulAntennaTx) {
 	case ANTENNA_A:
+		RTW_INFO("%s Setting the channle for ulAntennaTx == ANTENNA_A\n", __func__);
 		p_ofdm_tx->r_tx_antenna		= 0x1;
 		r_ofdm_tx_en_val		= 0x1;
 		p_ofdm_tx->r_ant_l		= 0x1;
@@ -1217,6 +1218,7 @@ VOID mpt_SetRFPath_819X(PADAPTER	pAdapter)
 		pMptCtx->mpt_rf_path = RF_PATH_A;
 		break;
 	case ANTENNA_B:
+		RTW_INFO("%s Setting the channle for ulAntennaTx == ANTENNA_B\n", __func__);		
 		p_ofdm_tx->r_tx_antenna		= 0x2;
 		r_ofdm_tx_en_val		= 0x2;
 		p_ofdm_tx->r_ant_l		= 0x2;
@@ -1244,6 +1246,7 @@ VOID mpt_SetRFPath_819X(PADAPTER	pAdapter)
 		pMptCtx->mpt_rf_path = RF_PATH_B;
 		break;
 	case ANTENNA_AB:/*/ For 8192S*/
+		RTW_INFO("%s Setting the channle for ulAntennaTx == ANTENNA_AB\n", __func__);
 		p_ofdm_tx->r_tx_antenna		= 0x3;
 		r_ofdm_tx_en_val		= 0x3;
 		p_ofdm_tx->r_ant_l		= 0x3;
@@ -1271,8 +1274,12 @@ VOID mpt_SetRFPath_819X(PADAPTER	pAdapter)
 		pMptCtx->mpt_rf_path = RF_PATH_AB;
 		break;
 	default:
+		RTW_INFO("%s SETTING NOTHING!!!\n", __func__);		
 		break;
 	}
+
+	RTW_INFO("%s pMptCtx->mpt_rf_path == %d \n", __func__, pMptCtx->mpt_rf_path);
+
 #if 0
 	/*  r_rx_antenna_ofdm, bit0=A, bit1=B, bit2=C, bit3=D */
 	/*  r_cckrx_enable : CCK default, 0=A, 1=B, 2=C, 3=D */
@@ -1589,6 +1596,8 @@ void hal_mpt_SetSingleToneTx(PADAPTER pAdapter, u8 bStart)
 		break;
 	}
 
+	RTW_INFO("%s rfPath == 0x%02x, mpt_rf_path == 0x%02x\n", __func__, rfPath, pMptCtx->mpt_rf_path);
+
 	pAdapter->mppriv.mpt_ctx.is_single_tone = bStart;
 	if (bStart) {
 		/*/ Start Single Tone.*/
@@ -1649,7 +1658,7 @@ void hal_mpt_SetSingleToneTx(PADAPTER pAdapter, u8 bStart)
 #if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A) || defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)
 			u1Byte p = RF_PATH_A;
 
-			regRF = phy_query_rf_reg(pAdapter, RF_PATH_A, RF_AC_Jaguar, bRFRegOffsetMask);
+			regRF = phy_query_rf_reg(pAdapter, rfPath, RF_AC_Jaguar, bRFRegOffsetMask);
 			regBB0 = phy_query_bb_reg(pAdapter, rA_RFE_Pinmux_Jaguar, bMaskDWord);
 			regBB1 = phy_query_bb_reg(pAdapter, rB_RFE_Pinmux_Jaguar, bMaskDWord);
 			regBB2 = phy_query_bb_reg(pAdapter, rA_RFE_Pinmux_Jaguar + 4, bMaskDWord);
@@ -1664,14 +1673,14 @@ void hal_mpt_SetSingleToneTx(PADAPTER pAdapter, u8 bStart)
 					phy_set_rf_reg(pAdapter, p, lna_low_gain_3, BIT1, 0x1); /*/ RF LO enabled*/
 				}
 			} else {
-				phy_set_rf_reg(pAdapter, pMptCtx->mpt_rf_path, RF_AC_Jaguar, 0xF0000, 0x2); /*/ Tx mode: RF0x00[19:16]=4'b0010 */
-				phy_set_rf_reg(pAdapter, pMptCtx->mpt_rf_path, RF_AC_Jaguar, 0x1F, 0x0); /*/ Lowest RF gain index: RF_0x0[4:0] = 0*/
+				phy_set_rf_reg(pAdapter, rfPath, RF_AC_Jaguar, 0xF0000, 0x2); /*/ Tx mode: RF0x00[19:16]=4'b0010 */
+				phy_set_rf_reg(pAdapter, rfPath, RF_AC_Jaguar, 0x1F, 0x0); /*/ Lowest RF gain index: RF_0x0[4:0] = 0*/
 #ifdef CONFIG_RTL8821C
 				if (IS_HARDWARE_TYPE_8821C(pAdapter) && pDM_Odm->current_rf_set_8821c == SWITCH_TO_BTG)
-					phy_set_rf_reg(pAdapter, pMptCtx->mpt_rf_path, 0x75, BIT16, 0x1); /* RF LO (for BTG) enabled */
+					phy_set_rf_reg(pAdapter, rfPath, 0x75, BIT16, 0x1); /* RF LO (for BTG) enabled */
 				else
 #endif
-					phy_set_rf_reg(pAdapter, pMptCtx->mpt_rf_path, lna_low_gain_3, BIT1, 0x1); /*/ RF LO enabled*/
+					phy_set_rf_reg(pAdapter, rfPath, lna_low_gain_3, BIT1, 0x1); /*/ RF LO enabled*/
 			}
 			if (IS_HARDWARE_TYPE_8822B(pAdapter)) {
 					phy_set_bb_reg(pAdapter, rA_RFE_Pinmux_Jaguar, bMaskDWord, 0x77777777);  /* 0xCB0=0x77777777*/
@@ -1695,13 +1704,23 @@ void hal_mpt_SetSingleToneTx(PADAPTER pAdapter, u8 bStart)
 				phy_set_bb_reg(pAdapter, rA_RFE_Pinmux_Jaguar, 0xFF00F0, 0x77007);  /*/ 0xCB0[[23:16, 7:4] = 0x77007*/
 				phy_set_bb_reg(pAdapter, rB_RFE_Pinmux_Jaguar, 0xFF00F0, 0x77007);  /*/ 0xCB0[[23:16, 7:4] = 0x77007*/
 
+				RTW_INFO("%s IDK WTF, It's fucked up\n", __func__);
+
+				// for debugging purposes: regardless of the 2.4G or 5.8G PA presence set both the PA outputs HIGH 
+				phy_set_bb_reg(pAdapter, rA_RFE_Pinmux_Jaguar + 4, 0xFF00000, 0x13);
+				phy_set_bb_reg(pAdapter, rB_RFE_Pinmux_Jaguar + 4, 0xFF00000, 0x13); 
+
+#if 0
 				if (pHalData->external_pa_5g) {
+					RTW_INFO("%s configure external_pa_5g\n", __func__);
 					phy_set_bb_reg(pAdapter, rA_RFE_Pinmux_Jaguar + 4, 0xFF00000, 0x12); /*/ 0xCB4[23:16] = 0x12*/
 					phy_set_bb_reg(pAdapter, rB_RFE_Pinmux_Jaguar + 4, 0xFF00000, 0x12); /*/ 0xEB4[23:16] = 0x12*/
 				} else if (pHalData->ExternalPA_2G) {
+					RTW_INFO("%s configure ExternalPA_2G\n", __func__);
 					phy_set_bb_reg(pAdapter, rA_RFE_Pinmux_Jaguar + 4, 0xFF00000, 0x11); /*/ 0xCB4[23:16] = 0x11*/
 					phy_set_bb_reg(pAdapter, rB_RFE_Pinmux_Jaguar + 4, 0xFF00000, 0x11); /*/ 0xEB4[23:16] = 0x11*/
 				}
+#endif
 			}
 #endif
 		}
